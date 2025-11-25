@@ -256,7 +256,7 @@ const Dashboard = () => {
                             {pendingUsers.length > 0 && <span className="ml-1 w-2 h-2 bg-red-500 rounded-full inline-block"></span>}
                         </button>
                         <button onClick={() => setActiveTab('approvals')} className={`flex-1 min-w-[80px] py-4 flex flex-col md:flex-row justify-center items-center gap-1 border-b-2 ${activeTab === 'approvals' ? 'border-blue-600 text-blue-600' : 'border-transparent'}`}>
-                            <Check className="w-4 h-4" /> House Req
+                            <Check className="w-4 h-4" /> Requests
                             {pendingHouses.length > 0 && <span className="ml-1 w-2 h-2 bg-red-500 rounded-full inline-block"></span>}
                         </button>
                     </>
