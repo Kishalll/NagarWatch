@@ -2,7 +2,7 @@
 
 **NagarWatch** is a modern, interactive community management dashboard designed to streamline operations for gated communities and residential associations. It provides a visual map-based interface for managing houses, tracking occupancy, organizing events, and maintaining meeting records.
 
-![NagarWatch Dashboard](https://via.placeholder.com/800x400?text=NagarWatch+Dashboard+Preview)
+![NagarWatch Dashboard](assets/dashboard-preview.png)
 
 ## 🚀 Features
 
