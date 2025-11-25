@@ -1,22 +1,49 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { UserPlus, Lock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { db } from '../config/firebase';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 
 const LoginScreen = () => {
-    const [email, setEmail] = useState('');
+    const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
-    const { login } = useAuth();
+    const { login, currentUser } = useAuth();
     const navigate = useNavigate();
+
+    useEffect(() => {
+        if (currentUser) {
+            navigate('/');
+        }
+    }, [currentUser, navigate]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
             setError('');
+
+            // 1. Find email for this username
+            console.log('Searching for username:', username);
+            const q = query(collection(db, 'users'), where('username', '==', username));
+            const querySnapshot = await getDocs(q);
+
+            if (querySnapshot.empty) {
+                console.log('Username not found in Firestore');
+                throw new Error('Username not found');
+            }
+
+            const userDoc = querySnapshot.docs[0].data();
+            console.log('User found:', userDoc);
+            const email = userDoc.email;
+            console.log('Attempting login with email:', email);
+
+            // 2. Login with found email
             await login(email, password);
-            navigate('/'); // Redirect to dashboard
+            console.log('Login successful');
+            // Navigation handled by useEffect
         } catch (err) {
+            console.error(err);
             setError('Failed to login: ' + err.message);
         }
     };
@@ -35,9 +62,9 @@ const LoginScreen = () => {
                 {error && <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm mb-4 border border-red-200">{error}</div>}
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className="text-xs font-bold text-slate-500 uppercase">Email</label>
-                        <input type="email" className="w-full p-3 bg-slate-50 border rounded-xl mt-1 focus:ring-2 focus:ring-blue-500 outline-none"
-                            value={email} onChange={e => setEmail(e.target.value)} required />
+                        <label className="text-xs font-bold text-slate-500 uppercase">Username</label>
+                        <input type="text" className="w-full p-3 bg-slate-50 border rounded-xl mt-1 focus:ring-2 focus:ring-blue-500 outline-none"
+                            value={username} onChange={e => setUsername(e.target.value)} required placeholder="e.g. kishal123" />
                     </div>
                     <div>
                         <label className="text-xs font-bold text-slate-500 uppercase">Password</label>

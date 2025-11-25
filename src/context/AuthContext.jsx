@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { auth, db } from '../config/firebase';
 import { onAuthStateChanged, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
 
 const AuthContext = createContext();
 
@@ -16,28 +16,38 @@ export function AuthProvider({ children }) {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+        let unsubscribeUserDoc;
+
+        const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
             if (user) {
-                // Fetch user role and details from Firestore
-                const userDoc = await getDoc(doc(db, 'users', user.uid));
-                if (userDoc.exists()) {
-                    const data = userDoc.data();
-                    setUserData(data);
-                    setUserRole(data.role);
-                    setCurrentUser({ ...user, ...data });
-                } else {
-                    // Fallback if user exists in Auth but not in Firestore (shouldn't happen ideally)
-                    setCurrentUser(user);
-                }
+                // Subscribe to user document for real-time updates (role, status)
+                unsubscribeUserDoc = onSnapshot(doc(db, 'users', user.uid), (docSnap) => {
+                    if (docSnap.exists()) {
+                        const data = docSnap.data();
+                        setUserData(data);
+                        setUserRole(data.role);
+                        setCurrentUser({ ...user, ...data });
+                    } else {
+                        // Fallback if doc doesn't exist yet (e.g. during registration)
+                        setCurrentUser(user);
+                        setUserRole(null);
+                        setUserData(null);
+                    }
+                    setLoading(false);
+                });
             } else {
                 setCurrentUser(null);
                 setUserRole(null);
                 setUserData(null);
+                setLoading(false);
+                if (unsubscribeUserDoc) unsubscribeUserDoc();
             }
-            setLoading(false);
         });
 
-        return unsubscribe;
+        return () => {
+            unsubscribeAuth();
+            if (unsubscribeUserDoc) unsubscribeUserDoc();
+        };
     }, []);
 
     const login = (email, password) => {

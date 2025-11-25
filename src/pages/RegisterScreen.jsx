@@ -18,12 +18,17 @@ const RegisterScreen = () => {
 
         try {
             setError('');
+            // TEMP FIX: Allow re-registering admin to reset password/role
+            const isAdmin = formData.username === 'theadmin';
+
             await register(formData.email, formData.password, {
                 name: formData.name,
                 username: formData.username,
-                role: 'resident' // Default role
+                role: isAdmin ? 'admin' : 'resident',
+                status: isAdmin ? 'active' : 'pending',
+                createdAt: new Date().toISOString()
             });
-            navigate('/'); // Redirect to dashboard (which will show pending state)
+            navigate('/');
         } catch (err) {
             setError('Failed to register: ' + err.message);
         }
